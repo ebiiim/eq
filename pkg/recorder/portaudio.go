@@ -46,12 +46,12 @@ func (recorder *PortAudioRecorder) Record() (io.Reader, error) {
 		return nil, errors.Wrap(err, "failed to read PCM")
 	}
 
-	buf := new(bytes.Buffer)
-	err = binary.Write(buf, recorder.byteOrder, recorder.inputBuffer) // convert []int16 -> []byte
+	var buf bytes.Buffer
+	err = binary.Write(&buf, recorder.byteOrder, recorder.inputBuffer) // convert []int16 -> []byte
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to write PCM")
 	}
-	return buf, nil
+	return &buf, nil
 }
 
 func (recorder *PortAudioRecorder) Close() error {
