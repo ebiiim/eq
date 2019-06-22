@@ -1,31 +1,50 @@
 package filter
 
 import (
+	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
+	"io/ioutil"
+	"sync"
 )
 
 type Filter interface {
-	io.Reader
+	Filter(reader io.Reader) (io.Reader, error)
 }
 
 type VolumeFilter struct {
-	volume float64
-	Reader io.Reader
+	initOnce sync.Once
+	mu       sync.Mutex
+	volume   float64
 }
 
-func NewVolumeFilter(reader io.Reader, volume float64) (*VolumeFilter, error) {
-	return &VolumeFilter{volume: volume, Reader: reader}, nil
-}
-
-func (f *VolumeFilter) Read(p []byte) (n int, err error) {
-	n, err = f.Reader.Read(p)
-	for i := 0; i < n-1; i += 2 {
-		slice := p[i : i+2]
-		sample := binary.LittleEndian.Uint16(slice)
-		bs := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bs, uint16(float64(int16(sample))*f.volume))
-		p[i], p[i+1] = bs[0], bs[1]
+func (f *VolumeFilter) SetVolume(volume float64) error {
+	if volume < 0.0 {
+		return fmt.Errorf("invalid volume %v", volume)
 	}
-	return
+	f.mu.Lock()
+	f.volume = volume
+	f.mu.Unlock()
+	return nil
+}
+
+func (f *VolumeFilter) Filter(reader io.Reader) (io.Reader, error) {
+	f.initOnce.Do(func() { _ = f.SetVolume(1.0) }) // safe
+
+	f.mu.Lock()
+	newVolume := f.volume
+	f.mu.Unlock()
+
+	buf, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(buf)-1; i += 2 {
+		sample := binary.LittleEndian.Uint16(buf[i : i+2])
+		bs := make([]byte, 2)
+		binary.LittleEndian.PutUint16(bs, uint16(float64(int16(sample))*newVolume))
+		buf[i], buf[i+1] = bs[0], bs[1]
+	}
+	return bytes.NewReader(buf), nil
 }

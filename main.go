@@ -10,7 +10,7 @@ import (
 
 func main() {
 	var (
-		bs   = 8192
+		bs   = 4096
 		ch   = 2
 		bit  = 16
 		rate = 48000
@@ -29,6 +29,8 @@ func main() {
 		panic(err)
 	}
 
+	var f filter.VolumeFilter
+
 	defer p.Close()
 	defer r.Close()
 
@@ -37,7 +39,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		reader, _ = filter.NewVolumeFilter(reader, 0.5)
+
+		reader, err = f.Filter(reader)
+		if err != nil {
+			panic(err)
+		}
+
 		err = p.Play(reader)
 		if err != nil {
 			panic(err)
