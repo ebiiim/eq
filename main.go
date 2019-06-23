@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ebiiim/eq/pkg/filter"
-	"github.com/ebiiim/eq/pkg/player"
-	"github.com/ebiiim/eq/pkg/recorder"
+	"github.com/ebiiim/eq/filter"
+	"github.com/ebiiim/eq/player"
+	"github.com/ebiiim/eq/recorder"
 	term "github.com/nsf/termbox-go"
 )
 

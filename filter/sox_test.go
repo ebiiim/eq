@@ -3,7 +3,7 @@ package filter_test
 import (
 	"testing"
 
-	"github.com/ebiiim/eq/pkg/filter"
+	"github.com/ebiiim/eq/filter"
 )
 
 func TestNewSoXGain(t *testing.T) {

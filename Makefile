@@ -1,7 +1,7 @@
 ROOT=github.com/ebiiim/eq
 BIN=bin/eq
 MAIN=main.go
-TEST=pkg/...
+TEST=...
 COVERAGE_FILE=cover
 
 CMD_ALL=all
