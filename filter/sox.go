@@ -73,7 +73,6 @@ func (f *SoXFilter) parseCmd() {
 	effs := f.effects
 	f.mu.Unlock()
 
-	// TODO: endian
 	cmdIn := fmt.Sprintf("-t%s -b%s -r%s -c%s -e%s --endian %s -", opts.inFmt, opts.inBit, opts.inRate, opts.inCh, opts.inEnc, opts.inByteOrder)
 	cmdOut := fmt.Sprintf("-t%s -b%s -r%s -c%s -e%s --endian %s -", opts.outFmt, opts.outBit, opts.outRate, opts.outCh, opts.outEnc, opts.outByteOrder)
 	cmdStr := fmt.Sprintf("%s %s %s", opts.app, cmdIn, cmdOut)
