@@ -161,12 +161,13 @@ var ToLower = func(b []byte) {
 	}
 }
 
-var Vol50 = func(b []byte) {
-	newVolume := 0.5
-	for i := 0; i < len(b)-1; i += 2 {
-		sample := binary.LittleEndian.Uint16(b[i : i+2])
-		bs := make([]byte, 2)
-		binary.LittleEndian.PutUint16(bs, uint16(float64(int16(sample))*newVolume))
-		b[i], b[i+1] = bs[0], bs[1]
+func Volume(volume float64) func(b []byte) {
+	return func(b []byte) {
+		for i := 0; i < len(b)-1; i += 2 {
+			sample := binary.LittleEndian.Uint16(b[i : i+2])
+			bs := make([]byte, 2)
+			binary.LittleEndian.PutUint16(bs, uint16(float64(int16(sample))*volume))
+			b[i], b[i+1] = bs[0], bs[1]
+		}
 	}
 }
