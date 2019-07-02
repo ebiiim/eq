@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type recorder struct {
+type Recorder struct {
 	initOnce     sync.Once
 	stream       *portaudio.Stream
 	recordBuffer *[]int16
@@ -20,7 +20,7 @@ type recorder struct {
 	readerBuffer bytes.Buffer
 }
 
-func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *recorder, err error) {
+func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {
 	recordBuffer := make([]int16, bufferSize)
 	// initialize Player
 	err = portaudio.Initialize()
@@ -37,11 +37,11 @@ func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byt
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start stream")
 	}
-	r = &recorder{stream: stream, recordBuffer: &recordBuffer, byteOrder: byteOrder}
+	r = &Recorder{stream: stream, recordBuffer: &recordBuffer, byteOrder: byteOrder}
 	return r, nil
 }
 
-func (r *recorder) initialize() {
+func (r *Recorder) initialize() {
 	go func() {
 		for {
 			gErr := r.record()
@@ -54,7 +54,7 @@ func (r *recorder) initialize() {
 	}()
 }
 
-func (r *recorder) record() error {
+func (r *Recorder) record() error {
 	err := r.stream.Read() // read pcm data from the record stream to the buffer
 	if err != nil {
 		return errors.Wrap(err, "failed to read PCM")
@@ -66,7 +66,7 @@ func (r *recorder) record() error {
 	return nil
 }
 
-func (r *recorder) Read(b []byte) (n int, err error) {
+func (r *Recorder) Read(b []byte) (n int, err error) {
 	r.initOnce.Do(r.initialize)
 
 	readLen := len(b)
@@ -78,7 +78,7 @@ func (r *recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-func (r *recorder) Close() error {
+func (r *Recorder) Close() error {
 	err := portaudio.Terminate()
 	if err != nil {
 		return errors.Wrap(err, "failed to terminate Player")
