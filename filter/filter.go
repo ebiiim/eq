@@ -17,7 +17,7 @@ type Filter interface {
 	io.ReadWriteCloser
 }
 
-type CmdFilter struct {
+type Pipe struct {
 	cmd       *exec.Cmd
 	initOnce  sync.Once
 	inPipe    io.WriteCloser
@@ -25,7 +25,7 @@ type CmdFilter struct {
 	FilterCmd string
 }
 
-func (f *CmdFilter) initialize() (err error) {
+func (f *Pipe) initialize() (err error) {
 	ss := strings.Split(f.FilterCmd, " ")
 	f.cmd = exec.Command(ss[0], ss[1:]...)
 
@@ -44,7 +44,7 @@ func (f *CmdFilter) initialize() (err error) {
 	return nil
 }
 
-func (f *CmdFilter) Read(b []byte) (n int, err error) {
+func (f *Pipe) Read(b []byte) (n int, err error) {
 	f.initOnce.Do(func() { err = f.initialize() })
 	if err != nil {
 		return 0, err
@@ -53,7 +53,7 @@ func (f *CmdFilter) Read(b []byte) (n int, err error) {
 	return
 }
 
-func (f *CmdFilter) Write(b []byte) (n int, err error) {
+func (f *Pipe) Write(b []byte) (n int, err error) {
 	f.initOnce.Do(func() { err = f.initialize() })
 	if err != nil {
 		return 0, err
@@ -62,7 +62,7 @@ func (f *CmdFilter) Write(b []byte) (n int, err error) {
 	return
 }
 
-func (f *CmdFilter) Close() (err error) {
+func (f *Pipe) Close() (err error) {
 	err = f.inPipe.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close stdin pipe")
@@ -82,7 +82,7 @@ func (f *CmdFilter) Close() (err error) {
 	return nil
 }
 
-type FuncFilter struct {
+type Func struct {
 	initOnce   sync.Once
 	inBuf      bytes.Buffer
 	outBuf     bytes.Buffer
@@ -93,7 +93,7 @@ type FuncFilter struct {
 	FilterFunc func([]byte)
 }
 
-func (f *FuncFilter) initialize() {
+func (f *Func) initialize() {
 	f.ChunkSize = 8
 	f.bufferSize = 65536 / f.ChunkSize // 64kB (max.)
 	f.inCh = make(chan []byte, f.bufferSize)
@@ -108,7 +108,7 @@ func (f *FuncFilter) initialize() {
 	}()
 }
 
-func (f *FuncFilter) Read(b []byte) (n int, err error) {
+func (f *Func) Read(b []byte) (n int, err error) {
 	f.initOnce.Do(f.initialize)
 
 	readLen := len(b)
@@ -118,7 +118,7 @@ func (f *FuncFilter) Read(b []byte) (n int, err error) {
 	return f.outBuf.Read(b)
 }
 
-func (f *FuncFilter) Write(b []byte) (n int, err error) {
+func (f *Func) Write(b []byte) (n int, err error) {
 	f.initOnce.Do(f.initialize)
 
 	f.inBuf.Write(b)
@@ -133,7 +133,7 @@ func (f *FuncFilter) Write(b []byte) (n int, err error) {
 	return len(b), nil
 }
 
-func (f *FuncFilter) Close() error {
+func (f *Func) Close() error {
 	close(f.outCh)
 	close(f.inCh)
 	return nil

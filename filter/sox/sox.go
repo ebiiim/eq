@@ -1,34 +1,34 @@
-package filter
+package sox
 
 import (
 	"fmt"
 	"sync"
 )
 
-type SoXOption string
+type Option string
 
 const (
-	FmtRAW, FmtFLAC, FmtMP3, FmtWAV       SoXOption = "raw", "flac", "mp3", "wav"
-	ChMono, ChStereo, Ch21, Ch51, Ch71    SoXOption = "1", "2", "3", "6", "8"
-	Rate44100, Rate48k, Rate96k, Rate192k SoXOption = "44100", "48000", "96000", "192000"
-	Bit16, Bit24, Bit32                   SoXOption = "16", "24", "32"
-	EncSigned, EncUnsigned, EncFloat      SoXOption = "signed", "unsigned", "floating"
-	EndianBig, EndianLittle               SoXOption = "-B", "-L"
+	FmtRAW, FmtFLAC, FmtMP3, FmtWAV       Option = "raw", "flac", "mp3", "wav"
+	Mono, Stereo, Ch21, Ch51, Ch71        Option = "1", "2", "3", "6", "8"
+	Rate44100, Rate48k, Rate96k, Rate192k Option = "44100", "48000", "96000", "192000"
+	Bit16, Bit24, Bit32                   Option = "16", "24", "32"
+	EncSigned, EncUnsigned, EncFloat      Option = "signed", "unsigned", "floating"
+	EndianBig, EndianLittle               Option = "-B", "-L"
 )
 
-type SoX struct {
+type Command struct {
 	initOnce                                                         sync.Once
 	ExecPath                                                         string
 	BufferSize                                                       int
-	InFormat, InChannels, InRate, InBit, InEncode, InByteOrder       SoXOption
-	OutFormat, OutChannels, OutRate, OutBit, OutEncode, OutByteOrder SoXOption
-	Effects                                                          []SoXEffect
+	InFormat, InChannels, InRate, InBit, InEncode, InByteOrder       Option
+	OutFormat, OutChannels, OutRate, OutBit, OutEncode, OutByteOrder Option
+	Effects                                                          []Effect
 }
 
-func (s *SoX) Cmd() string {
+func (s *Command) Get() string {
 	s.initOnce.Do(func() {
 		if s.ExecPath == "" {
-			s.ExecPath = "sox"
+			s.ExecPath = "cmd"
 		}
 		if s.BufferSize == 0 {
 			s.BufferSize = 8192 // --buffer N (default: 8192)
@@ -37,7 +37,7 @@ func (s *SoX) Cmd() string {
 			s.InFormat = FmtRAW
 		}
 		if s.InChannels == "" {
-			s.InChannels = ChStereo
+			s.InChannels = Stereo
 		}
 		if s.InRate == "" {
 			s.InRate = Rate48k
@@ -55,7 +55,7 @@ func (s *SoX) Cmd() string {
 			s.OutFormat = FmtRAW
 		}
 		if s.OutChannels == "" {
-			s.OutChannels = ChStereo
+			s.OutChannels = Stereo
 		}
 		if s.OutRate == "" {
 			s.OutRate = Rate48k
@@ -81,12 +81,12 @@ func (s *SoX) Cmd() string {
 	return cmdStr
 }
 
-type SoXEffect string
+type Effect string
 
-func NewSoXGain(gain float64) SoXEffect {
-	return SoXEffect(fmt.Sprintf("gain %.3f", gain))
+func NewGain(gain float64) Effect {
+	return Effect(fmt.Sprintf("gain %.3f", gain))
 }
 
-func NewSoXEQ(freq uint, q float64, gain float64) SoXEffect {
-	return SoXEffect(fmt.Sprintf("equalizer %d %.3f %.3f", freq, q, gain))
+func NewEQ(freq uint, q float64, gain float64) Effect {
+	return Effect(fmt.Sprintf("equalizer %d %.3f %.3f", freq, q, gain))
 }

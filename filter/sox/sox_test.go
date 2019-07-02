@@ -1,9 +1,9 @@
-package filter_test
+package sox_test
 
 import (
 	"testing"
 
-	"github.com/ebiiim/eq/filter"
+	"github.com/ebiiim/eq/filter/sox"
 )
 
 func TestNewSoXGain(t *testing.T) {
@@ -23,7 +23,7 @@ func TestNewSoXGain(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := filter.NewSoXGain(c.gain)
+			s := sox.NewGain(c.gain)
 			if string(s) != c.want {
 				t.Errorf("want %v got %v", c.want, s)
 			}
@@ -46,7 +46,7 @@ func TestNewSoXEQ(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := filter.NewSoXEQ(c.freq, c.q, c.gain)
+			s := sox.NewEQ(c.freq, c.q, c.gain)
 			if string(s) != c.want {
 				t.Errorf("want %v got %v", c.want, s)
 			}
@@ -57,16 +57,16 @@ func TestNewSoXEQ(t *testing.T) {
 func TestSoX_Cmd(t *testing.T) {
 	cases := []struct {
 		name string
-		sox  *filter.SoX
+		cmd  *sox.Command
 		want string
 	}{
-		{"default", &filter.SoX{}, "sox -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
+		{"default", &sox.Command{}, "cmd -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := c.sox.Cmd()
+			s := c.cmd.Get()
 			if s != c.want {
 				t.Errorf("want %v\ngot  %v", c.want, s)
 			}

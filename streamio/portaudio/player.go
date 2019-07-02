@@ -1,4 +1,4 @@
-package player
+package portaudio
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type PortAudio struct {
+type Player struct {
 	initOnce     sync.Once
 	stream       *portaudio.Stream
 	playBuffer   *[]int16
@@ -20,12 +20,12 @@ type PortAudio struct {
 	writerBuffer bytes.Buffer
 }
 
-func NewPortAudio(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *PortAudio, err error) {
+func NewPlayer(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *Player, err error) {
 	playBuffer := make([]int16, bufferSize)
-	// initialize PortAudio
+	// initialize Player
 	err = portaudio.Initialize()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize PortAudio")
+		return nil, errors.Wrap(err, "failed to initialize Player")
 	}
 	// open an input stream
 	stream, err := portaudio.OpenDefaultStream(0, channels, float64(sampleRate), bufferSize, playBuffer)
@@ -37,11 +37,11 @@ func NewPortAudio(bufferSize int, channels int, bitDepth int, sampleRate int, by
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start stream")
 	}
-	p = &PortAudio{stream: stream, playBuffer: &playBuffer, byteOrder: byteOrder}
+	p = &Player{stream: stream, playBuffer: &playBuffer, byteOrder: byteOrder}
 	return p, nil
 }
 
-func (p *PortAudio) initialize() {
+func (p *Player) initialize() {
 	go func() {
 		for {
 			gErr := p.play()
@@ -54,7 +54,7 @@ func (p *PortAudio) initialize() {
 	}()
 }
 
-func (p *PortAudio) play() error {
+func (p *Player) play() error {
 	for p.writerBuffer.Len()*2 <= len(*p.playBuffer) {
 		time.Sleep(1 * time.Millisecond) // wait for record
 	}
@@ -69,15 +69,15 @@ func (p *PortAudio) play() error {
 	return nil
 }
 
-func (p *PortAudio) Write(b []byte) (n int, err error) {
+func (p *Player) Write(b []byte) (n int, err error) {
 	p.initOnce.Do(p.initialize)
 	return p.writerBuffer.Write(b)
 }
 
-func (p *PortAudio) Close() error {
+func (p *Player) Close() error {
 	err := portaudio.Terminate()
 	if err != nil {
-		return errors.Wrap(err, "failed to terminate PortAudio")
+		return errors.Wrap(err, "failed to terminate Player")
 	}
 	err = p.stream.Stop()
 	if err != nil {

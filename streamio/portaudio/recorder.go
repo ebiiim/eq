@@ -1,4 +1,4 @@
-package recorder
+package portaudio
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type PortAudio struct {
+type recorder struct {
 	initOnce     sync.Once
 	stream       *portaudio.Stream
 	recordBuffer *[]int16
@@ -20,12 +20,12 @@ type PortAudio struct {
 	readerBuffer bytes.Buffer
 }
 
-func NewPortAudio(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *PortAudio, err error) {
+func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *recorder, err error) {
 	recordBuffer := make([]int16, bufferSize)
-	// initialize PortAudio
+	// initialize Player
 	err = portaudio.Initialize()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize PortAudio")
+		return nil, errors.Wrap(err, "failed to initialize Player")
 	}
 	// open an output stream
 	stream, err := portaudio.OpenDefaultStream(channels, 0, float64(sampleRate), bufferSize, recordBuffer)
@@ -37,11 +37,11 @@ func NewPortAudio(bufferSize int, channels int, bitDepth int, sampleRate int, by
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start stream")
 	}
-	r = &PortAudio{stream: stream, recordBuffer: &recordBuffer, byteOrder: byteOrder}
+	r = &recorder{stream: stream, recordBuffer: &recordBuffer, byteOrder: byteOrder}
 	return r, nil
 }
 
-func (r *PortAudio) initialize() {
+func (r *recorder) initialize() {
 	go func() {
 		for {
 			gErr := r.record()
@@ -54,7 +54,7 @@ func (r *PortAudio) initialize() {
 	}()
 }
 
-func (r *PortAudio) record() error {
+func (r *recorder) record() error {
 	err := r.stream.Read() // read pcm data from the record stream to the buffer
 	if err != nil {
 		return errors.Wrap(err, "failed to read PCM")
@@ -66,7 +66,7 @@ func (r *PortAudio) record() error {
 	return nil
 }
 
-func (r *PortAudio) Read(b []byte) (n int, err error) {
+func (r *recorder) Read(b []byte) (n int, err error) {
 	r.initOnce.Do(r.initialize)
 
 	readLen := len(b)
@@ -78,10 +78,10 @@ func (r *PortAudio) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-func (r *PortAudio) Close() error {
+func (r *recorder) Close() error {
 	err := portaudio.Terminate()
 	if err != nil {
-		return errors.Wrap(err, "failed to terminate PortAudio")
+		return errors.Wrap(err, "failed to terminate Player")
 	}
 	err = r.stream.Stop()
 	if err != nil {
