@@ -28,7 +28,7 @@ type Command struct {
 func (s *Command) Get() string {
 	s.initOnce.Do(func() {
 		if s.ExecPath == "" {
-			s.ExecPath = "cmd"
+			s.ExecPath = "sox"
 		}
 		if s.BufferSize == 0 {
 			s.BufferSize = 8192 // --buffer N (default: 8192)
