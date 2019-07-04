@@ -25,7 +25,7 @@ type Command struct {
 	Effects                                                          []Effect
 }
 
-func (s *Command) Get() string {
+func (s *Command) String() string {
 	s.initOnce.Do(func() {
 		if s.ExecPath == "" {
 			s.ExecPath = "sox"

@@ -66,7 +66,7 @@ func TestSoX_Cmd(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := c.cmd.Get()
+			s := c.cmd.String()
 			if s != c.want {
 				t.Errorf("want %v\ngot  %v", c.want, s)
 			}

@@ -60,7 +60,7 @@ func initialize() {
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
 	tui.vf.FilterFunc = filter.Volume(tui.volume)
-	tui.sf.FilterCmd = soxCommand.Get()
+	tui.sf.FilterCmd = soxCommand.String()
 }
 
 func play(ctx context.Context) {
