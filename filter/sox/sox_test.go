@@ -23,9 +23,9 @@ func TestNewSoXGain(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := sox.NewGain(c.gain)
-			if string(s) != c.want {
-				t.Errorf("want %v got %v", c.want, s)
+			got := sox.NewGain(c.gain)
+			if string(got) != c.want {
+				t.Errorf("got %v want %v", got, c.want)
 			}
 		})
 	}
@@ -46,9 +46,9 @@ func TestNewSoXEQ(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := sox.NewEQ(c.freq, c.q, c.gain)
-			if string(s) != c.want {
-				t.Errorf("want %v got %v", c.want, s)
+			got := sox.NewEQ(c.freq, c.q, c.gain)
+			if string(got) != c.want {
+				t.Errorf("got %v want %v", got, c.want)
 			}
 		})
 	}
@@ -60,15 +60,15 @@ func TestSoX_Cmd(t *testing.T) {
 		cmd  *sox.Command
 		want string
 	}{
-		{"default", &sox.Command{}, "cmd -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
+		{"default", &sox.Command{}, "sox -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			s := c.cmd.String()
-			if s != c.want {
-				t.Errorf("want %v\ngot  %v", c.want, s)
+			got := c.cmd.String()
+			if got != c.want {
+				t.Errorf("got %v\nwant  %v", got, c.want)
 			}
 		})
 	}
