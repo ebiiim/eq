@@ -71,10 +71,8 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 
 	readLen := len(b)
 	for r.readerBuffer.Len() < readLen {
-		//fmt.Print("r")
 		time.Sleep(1 * time.Millisecond) // wait for record
 	}
-	//time.Sleep(100 * time.Millisecond)
 	return r.readerBuffer.Read(b)
 }
 

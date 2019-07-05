@@ -113,7 +113,10 @@ func (f *Func) Read(b []byte) (n int, err error) {
 
 	readLen := len(b)
 	for f.outBuf.Len() < readLen {
-		f.outBuf.Write(<-f.outCh)
+		_, err := f.outBuf.Write(<-f.outCh)
+		if err != nil {
+			return 0, err
+		}
 	}
 	return f.outBuf.Read(b)
 }
