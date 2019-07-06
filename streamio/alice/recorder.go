@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ebiiim/eq/safe"
+	"github.com/ebiiim/eq/internal/safe"
 )
 
 type Recorder struct {

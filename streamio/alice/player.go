@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ebiiim/eq/safe"
+	"github.com/ebiiim/eq/internal/safe"
 	"github.com/pkg/errors"
 )
 
