@@ -14,8 +14,8 @@ func TestRecorder_Read(t *testing.T) {
 		bufLen int
 		want   [][]byte
 	}{
-		{"1B", &alice.Recorder{}, 1, [][]byte{[]byte("R"), []byte("e")}},
-		{"8B", &alice.Recorder{}, 8, [][]byte{[]byte("Recorder"), []byte(" was beg")}},
+		{"1B", &alice.Recorder{}, 1, [][]byte{[]byte("A"), []byte("l")}},
+		{"8B", &alice.Recorder{}, 8, [][]byte{[]byte("Alice wa"), []byte("s beginn")}},
 	}
 	for _, c := range cases {
 		c := c
@@ -43,7 +43,7 @@ func TestRecorder_Close(t *testing.T) {
 		isErr bool
 	}{
 		{"init", &alice.Recorder{}, func(r *alice.Recorder) {}, false},
-		{"after_read", &alice.Recorder{}, func(r *alice.Recorder) { r.Read(make([]byte, 4)) }, false},
+		{"after_read", &alice.Recorder{}, func(r *alice.Recorder) { r.Read(make([]byte, 8)) }, false},
 	}
 	for _, c := range cases {
 		c := c
