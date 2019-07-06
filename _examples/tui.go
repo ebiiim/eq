@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/ebiiim/eq/filter"
-	"github.com/ebiiim/eq/filter/sox"
+	"github.com/ebiiim/eq/filter/function"
+	"github.com/ebiiim/eq/filter/pipe"
+	"github.com/ebiiim/eq/filter/pipe/sox"
 	"github.com/ebiiim/eq/streamio"
 	"github.com/ebiiim/eq/streamio/portaudio"
 	term "github.com/nsf/termbox-go"
@@ -19,8 +20,8 @@ import (
 type TUI struct {
 	r      streamio.Recorder
 	p      streamio.Player
-	vf     *filter.Func
-	sf     *filter.Pipe
+	vf     *function.Filter
+	sf     *pipe.Filter
 	volume float64
 	isMute bool
 	mu     sync.Mutex
@@ -75,8 +76,8 @@ func initialize() error {
 		return err
 	}
 
-	var volumeFilter filter.Func
-	var soxFilter filter.Pipe
+	var volumeFilter function.Filter
+	var soxFilter pipe.Filter
 
 	tui.r = r
 	tui.p = p
@@ -88,7 +89,7 @@ func initialize() error {
 	soxCommand.BufferSize = bs
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
-	tui.vf.FilterFunc, err = filter.Volume(tui.volume)
+	tui.vf.FilterFunc, err = function.Volume(tui.volume)
 	if err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func startTUI() error {
 	}
 
 	var setVolume = func(vol float64) error {
-		fn, err := filter.Volume(vol)
+		fn, err := function.Volume(vol)
 		if err != nil {
 			return err
 		}

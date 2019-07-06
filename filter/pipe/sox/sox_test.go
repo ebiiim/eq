@@ -3,7 +3,7 @@ package sox_test
 import (
 	"testing"
 
-	"github.com/ebiiim/eq/filter/sox"
+	"github.com/ebiiim/eq/filter/pipe/sox"
 )
 
 func TestNewSoXGain(t *testing.T) {
