@@ -26,7 +26,7 @@ type TUI struct {
 
 var tui TUI
 
-func initialize() {
+func initialize() error {
 	var (
 		bs   = 4096
 		ch   = 2
@@ -37,14 +37,12 @@ func initialize() {
 
 	r, err := portaudio.NewRecorder(bs, ch, bit, rate, bo)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 
 	p, err := portaudio.NewPlayer(bs, ch, bit, rate, bo)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 
 	var volumeFilter filter.Func
@@ -60,8 +58,12 @@ func initialize() {
 	soxCommand.BufferSize = bs
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
-	tui.vf.FilterFunc = filter.Volume(tui.volume)
+	tui.vf.FilterFunc, err = filter.Volume(tui.volume)
+	if err != nil {
+		return err
+	}
 	tui.sf.FilterCmd = soxCommand.String()
+	return nil
 }
 
 func play(ctx context.Context) {
@@ -111,32 +113,70 @@ func play(ctx context.Context) {
 	}
 }
 
-func startTUI() {
+func startTUI() error {
 	var clearTerm = func() {
 		err := term.Sync()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
-		fmt.Println(
+		fmt.Printf(
 			"[↑]     Volume Up\n" +
 				"[↓]     Volume Down\n" +
 				"[Space] Mute/Unmute" +
-				"\n[Esc]   Exit")
-		fmt.Println()
+				"\n[Esc]   Exit\n\n")
 	}
-	var setVolume = func(vol float64) {
+
+	var setVolume = func(vol float64) error {
+		fn, err := filter.Volume(vol)
+		if err != nil {
+			return err
+		}
 		tui.mu.Lock()
-		tui.vf.FilterFunc = filter.Volume(vol)
+		tui.vf.FilterFunc = fn
 		tui.mu.Unlock()
+		return nil
+	}
+
+	var mute = func() {
+		if !tui.isMute {
+			fmt.Println("Mute")
+			tui.isMute = true
+			setVolume(0) // safe
+		}
+	}
+
+	var unmute = func() {
+		if tui.isMute {
+			fmt.Println("Unmute")
+			tui.isMute = false
+			setVolume(tui.volume) // safe
+		}
+	}
+
+	var volumeUp = func() {
+		tui.volume += 0.1
+		setVolume(tui.volume) // safe
+		fmt.Printf("Volume Up %.2f\n", tui.volume)
+	}
+
+	var volumeDown = func() {
+		vol := tui.volume - 0.1
+		err := setVolume(vol)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "err %v", err)
+			return
+		}
+		tui.volume = vol
+		fmt.Printf("Volume Down %.2f\n", tui.volume)
 	}
 
 	err := term.Init()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 	defer term.Close()
 
+	// start the TUI app
 	clearTerm()
 keyboardListenerLoop:
 	for {
@@ -144,43 +184,43 @@ keyboardListenerLoop:
 		case term.EventKey:
 			switch ev.Key {
 			case term.KeyEsc, term.KeyEnter, term.KeyCtrlC:
-				clearTerm()
 				break keyboardListenerLoop
 			case term.KeyArrowUp, term.KeyArrowLeft:
 				clearTerm()
-				tui.volume += 0.1
-				fmt.Printf("Volume Up %.2f\n", tui.volume)
-				setVolume(tui.volume)
+				unmute()
+				volumeUp()
 			case term.KeyArrowDown, term.KeyArrowRight:
 				clearTerm()
-				tui.volume -= 0.1
-				fmt.Printf("Volume Down %.2f\n", tui.volume)
-				setVolume(tui.volume)
+				unmute()
+				volumeDown()
 			case term.KeySpace:
 				clearTerm()
 				if tui.isMute {
-					fmt.Println("Unmute")
-					tui.isMute = false
-					setVolume(tui.volume)
+					unmute()
 				} else {
-					fmt.Println("Mute")
-					tui.isMute = true
-					setVolume(0)
+					mute()
 				}
-			default: // do nothing
 			}
 		case term.EventError:
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+			return ev.Err
 		}
 	}
+	return nil
 }
 
 func main() {
-	initialize()
+	err := initialize()
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
 	bc := context.Background()
 	ctx, cancel := context.WithCancel(bc)
 	defer cancel()
 	go play(ctx)
-	startTUI()
+	err = startTUI()
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
 }
