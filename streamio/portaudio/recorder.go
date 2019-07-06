@@ -1,13 +1,13 @@
 package portaudio
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/ebiiim/eq/safe"
 	"github.com/gordonklaus/portaudio"
 	"github.com/pkg/errors"
 )
@@ -17,7 +17,7 @@ type Recorder struct {
 	stream       *portaudio.Stream
 	recordBuffer *[]int16
 	byteOrder    binary.ByteOrder
-	readerBuffer bytes.Buffer
+	readerBuffer safe.Buffer
 }
 
 func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {

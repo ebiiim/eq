@@ -1,18 +1,18 @@
 package alice
 
 import (
-	"bytes"
 	"io"
 	"sync"
 	"time"
 
+	"github.com/ebiiim/eq/safe"
 	"github.com/pkg/errors"
 )
 
 type Player struct {
 	initOnce     sync.Once
 	writer       io.Writer
-	writerBuffer bytes.Buffer
+	writerBuffer safe.Buffer
 	bufLen       int
 }
 

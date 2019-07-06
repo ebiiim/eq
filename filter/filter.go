@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"sync"
 	"unicode"
 
+	"github.com/ebiiim/eq/safe"
 	"github.com/pkg/errors"
 )
 
@@ -84,8 +84,8 @@ func (f *Pipe) Close() (err error) {
 
 type Func struct {
 	initOnce   sync.Once
-	inBuf      bytes.Buffer
-	outBuf     bytes.Buffer
+	inBuf      safe.Buffer
+	outBuf     safe.Buffer
 	inCh       chan []byte
 	outCh      chan []byte
 	bufferSize int

@@ -1,14 +1,15 @@
 package alice
 
 import (
-	"bytes"
 	"sync"
 	"time"
+
+	"github.com/ebiiim/eq/safe"
 )
 
 type Recorder struct {
 	initOnce     sync.Once
-	readerBuffer bytes.Buffer
+	readerBuffer safe.Buffer
 }
 
 func (r *Recorder) initialize() {
