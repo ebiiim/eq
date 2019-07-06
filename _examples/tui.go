@@ -57,6 +57,7 @@ func initialize() {
 	tui.volume = 1
 
 	var soxCommand sox.Command
+	soxCommand.BufferSize = bs
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
 	tui.vf.FilterFunc = filter.Volume(tui.volume)
@@ -76,8 +77,7 @@ func play(ctx context.Context) {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}()
-
-	b := make([]byte, 1024*8)
+	b := make([]byte, 4096*2)
 	for {
 		select {
 		case <-ctx.Done():
