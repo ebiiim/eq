@@ -94,7 +94,12 @@ type Func struct {
 }
 
 func (f *Func) initialize() {
-	f.ChunkSize = 8
+	if f.ChunkSize == 0 {
+		f.ChunkSize = 8
+	}
+	if f.FilterFunc == nil {
+		f.FilterFunc = func([]byte) {}
+	}
 	f.bufferSize = 65536 / f.ChunkSize // 64kB (max.)
 	f.inCh = make(chan []byte, f.bufferSize)
 	f.outCh = make(chan []byte, f.bufferSize)
@@ -121,10 +126,13 @@ func (f *Func) Read(b []byte) (n int, err error) {
 	return f.outBuf.Read(b)
 }
 
-func (f *Func) Write(b []byte) (n int, err error) {
+func (f *Func) Write(b []byte) (int, error) {
 	f.initOnce.Do(f.initialize)
 
-	f.inBuf.Write(b)
+	_, err := f.inBuf.Write(b)
+	if err != nil {
+		return 0, err
+	}
 	for f.inBuf.Len() >= f.ChunkSize {
 		bb := make([]byte, f.ChunkSize)
 		_, err = f.inBuf.Read(bb)
@@ -164,8 +172,11 @@ var ToLower = func(b []byte) {
 	}
 }
 
-func Volume(volume float64) func(b []byte) {
-	return func(b []byte) {
+func Volume(volume float64) (func(b []byte), error) {
+	if volume < 0 {
+		return nil, errors.New("volume must be >0")
+	}
+	fn := func(b []byte) {
 		for i := 0; i < len(b)-1; i += 2 {
 			sample := binary.LittleEndian.Uint16(b[i : i+2])
 			bs := make([]byte, 2)
@@ -173,4 +184,5 @@ func Volume(volume float64) func(b []byte) {
 			b[i], b[i+1] = bs[0], bs[1]
 		}
 	}
+	return fn, nil
 }
