@@ -33,7 +33,7 @@ func (p *Player) initialize() {
 }
 
 func (p *Player) play() error {
-	for p.writerBuffer.Len() <= p.bufLen {
+	for p.writerBuffer.Len() < p.bufLen {
 		time.Sleep(100 * time.Millisecond) // wait for record
 	}
 	buf := make([]byte, p.bufLen)

@@ -55,7 +55,7 @@ func (p *Player) initialize() {
 }
 
 func (p *Player) play() error {
-	for p.writerBuffer.Len()*2 <= len(*p.playBuffer) {
+	for p.writerBuffer.Len()*2 < len(*p.playBuffer) {
 		time.Sleep(1 * time.Millisecond) // wait for record
 	}
 	err := binary.Read(&p.writerBuffer, p.byteOrder, p.playBuffer) // convert []int16 -> []byte
