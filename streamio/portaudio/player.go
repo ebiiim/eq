@@ -20,7 +20,7 @@ type Player struct {
 	writerBuffer safe.Buffer
 }
 
-func NewPlayer(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *Player, err error) {
+func NewPlayer(outputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *Player, err error) {
 	playBuffer := make([]int16, bufferSize)
 	// initialize Player
 	err = portaudio.Initialize()
@@ -28,7 +28,7 @@ func NewPlayer(bufferSize int, channels int, bitDepth int, sampleRate int, byteO
 		return nil, errors.Wrap(err, "failed to initialize Player")
 	}
 	// open an input stream
-	stream, err := portaudio.OpenDefaultStream(0, channels, float64(sampleRate), bufferSize, playBuffer)
+	stream, err := OpenStream(-1, outputDeviceID, 0, channels, float64(sampleRate), bufferSize, playBuffer)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open stream")
 	}

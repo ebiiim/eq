@@ -20,7 +20,7 @@ type Recorder struct {
 	readerBuffer safe.Buffer
 }
 
-func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {
+func NewRecorder(inputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {
 	recordBuffer := make([]int16, bufferSize)
 	// initialize Player
 	err = portaudio.Initialize()
@@ -28,7 +28,7 @@ func NewRecorder(bufferSize int, channels int, bitDepth int, sampleRate int, byt
 		return nil, errors.Wrap(err, "failed to initialize Player")
 	}
 	// open an output stream
-	stream, err := portaudio.OpenDefaultStream(channels, 0, float64(sampleRate), bufferSize, recordBuffer)
+	stream, err := OpenStream(inputDeviceID, -1, channels, 0, float64(sampleRate), bufferSize, recordBuffer)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open stream")
 	}

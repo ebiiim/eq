@@ -25,7 +25,7 @@ func initRecorders(t *testing.T) []*portaudio.Recorder {
 		{8192, 2, 16, 48000, binary.LittleEndian},
 	}
 	for i, v := range rs {
-		r, err := portaudio.NewRecorder(v.bs, v.ch, v.b, v.r, v.bo)
+		r, err := portaudio.NewRecorder(-1, v.bs, v.ch, v.b, v.r, v.bo)
 		if err != nil {
 			t.Fatalf("could not init recorder #%d", i)
 		}

@@ -25,7 +25,7 @@ func initPlayers(t *testing.T) []*portaudio.Player {
 		{8192, 2, 16, 48000, binary.LittleEndian},
 	}
 	for i, v := range ps {
-		p, err := portaudio.NewPlayer(v.bs, v.ch, v.b, v.r, v.bo)
+		p, err := portaudio.NewPlayer(-1, v.bs, v.ch, v.b, v.r, v.bo)
 		if err != nil {
 			t.Fatalf("could not init player #%d", i)
 		}

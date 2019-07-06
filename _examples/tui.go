@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/binary"
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/ebiiim/eq/filter"
@@ -27,20 +29,48 @@ type TUI struct {
 var tui TUI
 
 func initialize() error {
-	var (
-		bs   = 4096
-		ch   = 2
-		bit  = 16
-		rate = 48000
-		bo   = binary.LittleEndian
+	var scanIDLoop = func(s string) int {
+		fmt.Print(s)
+		sc := bufio.NewScanner(os.Stdin)
+		for sc.Scan() {
+			s := sc.Text()
+			if s == "" {
+				return -1
+			}
+			id, err := strconv.Atoi(s)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Print(s)
+				continue
+			}
+			return id
+		}
+		return 9999 // unreachable
+	}
+
+	const (
+		bs   = 4096  // buffer size
+		ch   = 2     // channels
+		bit  = 16    // bit rate
+		rate = 48000 // sampling rate
 	)
 
-	r, err := portaudio.NewRecorder(bs, ch, bit, rate, bo)
+	ds, err := portaudio.ListDevices()
+	if err != nil {
+		return err
+	}
+	for _, v := range ds {
+		fmt.Println(v)
+	}
+	inID := scanIDLoop("Select an input device > ")
+	outID := scanIDLoop("Select an output device > ")
+
+	r, err := portaudio.NewRecorder(inID, bs, ch, bit, rate, binary.LittleEndian)
 	if err != nil {
 		return err
 	}
 
-	p, err := portaudio.NewPlayer(bs, ch, bit, rate, bo)
+	p, err := portaudio.NewPlayer(outID, bs, ch, bit, rate, binary.LittleEndian)
 	if err != nil {
 		return err
 	}
@@ -199,6 +229,10 @@ keyboardListenerLoop:
 					unmute()
 				} else {
 					mute()
+				}
+			default:
+				if ev.Ch == 0x71 { // 'q'
+					break keyboardListenerLoop
 				}
 			}
 		case term.EventError:
