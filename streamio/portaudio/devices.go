@@ -1,3 +1,4 @@
+// Package portaudio provides an implementation of streamio.Player and streamio.Recorder using PortAudio.
 package portaudio
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ListDevices returns a slice of string containing device info on each line.
 func ListDevices() ([]string, error) {
 	err := portaudio.Initialize()
 	if err != nil {
@@ -31,6 +33,9 @@ func ListDevices() ([]string, error) {
 	return ss, nil
 }
 
+// OpenStream opens a stream with device IDs that portaudio.OpenDefaultStream does not support.
+//
+// If the device ID is -1, the function uses the default input/output device.
 func OpenStream(inputDeviceID, outputDeviceID int, numInputChannels, numOutputChannels int, sampleRate float64, framesPerBuffer int, args ...interface{}) (*portaudio.Stream, error) {
 	var in, out *portaudio.DeviceInfo
 	var err error

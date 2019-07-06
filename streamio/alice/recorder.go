@@ -7,6 +7,7 @@ import (
 	"github.com/ebiiim/eq/internal/safe"
 )
 
+// Recorder is a slow readable device that emulates an audio input device.
 type Recorder struct {
 	initOnce     sync.Once
 	readerBuffer safe.Buffer
@@ -35,6 +36,14 @@ func (r *Recorder) record() error {
 	return nil
 }
 
+// Read reads len(b) bytes from the record buffer into b.
+//
+// The function blocks if the record buffer contains less than len(b) bytes.
+// The function does not support ioutil.ReadAll (blocks permanently).
+//
+// The first call to this function invokes a goroutine
+// that sequentially writes characters (from "Alice's Adventures in Wonderland")
+// into the record buffer, to emulate an audio input device.
 func (r *Recorder) Read(b []byte) (n int, err error) {
 	r.initOnce.Do(r.initialize)
 
@@ -45,6 +54,7 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
+// Close simply returns nil because there is nothing to close in Recorder.
 func (r *Recorder) Close() error {
 	return nil
 }

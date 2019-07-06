@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Recorder is a readable PortAudio input device.
 type Recorder struct {
 	initOnce     sync.Once
 	stream       *portaudio.Stream
@@ -20,6 +21,7 @@ type Recorder struct {
 	readerBuffer safe.Buffer
 }
 
+// NewRecorder initialize a Player object.
 func NewRecorder(inputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {
 	recordBuffer := make([]int16, bufferSize)
 	// initialize Player
@@ -66,6 +68,14 @@ func (r *Recorder) record() error {
 	return nil
 }
 
+// Read reads len(b) bytes from the record buffer into b.
+//
+// The function blocks if the record buffer contains less than len(b) bytes.
+// The function does not support ioutil.ReadAll (blocks permanently).
+//
+// The first call to this function invokes a goroutine
+// that sequentially reads data from the audio input device
+// and writes the data into the record buffer.
 func (r *Recorder) Read(b []byte) (n int, err error) {
 	r.initOnce.Do(r.initialize)
 
@@ -76,8 +86,9 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-func (r *Recorder) Close() error {
-	err := portaudio.Terminate()
+// Close closes PortAudio.
+func (r *Recorder) Close() (err error) {
+	err = portaudio.Terminate() // do this first to avoid race conditions
 	if err != nil {
 		return errors.Wrap(err, "failed to terminate Player")
 	}

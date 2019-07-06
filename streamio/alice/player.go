@@ -1,3 +1,4 @@
+// Package alice provides an implementation of streamio.Player and streamio.Recorder that playbacks "Alice's Adventures in Wonderland" for testing purposes.
 package alice
 
 import (
@@ -9,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Player is a slow writable device that emulates an audio output device.
 type Player struct {
 	initOnce     sync.Once
 	writer       io.Writer
@@ -16,6 +18,7 @@ type Player struct {
 	bufLen       int
 }
 
+// NewPlayer initialize a Player object.
 func NewPlayer(writer io.Writer, bufferSize int) (p *Player, err error) {
 	p = &Player{writer: writer, bufLen: bufferSize}
 	return p, nil
@@ -48,11 +51,16 @@ func (p *Player) play() error {
 	return nil
 }
 
+// Write writes len(b) bytes from b into the playback buffer.
+//
+// The first call to this function invokes a goroutine
+// that reads the playback buffer sequentially to emulate an audio output device.
 func (p *Player) Write(b []byte) (n int, err error) {
 	p.initOnce.Do(p.initialize)
 	return p.writerBuffer.Write(b)
 }
 
+// Close simply returns nil because there is nothing to close in Player.
 func (p *Player) Close() error {
 	return nil
 }

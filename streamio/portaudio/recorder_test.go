@@ -45,7 +45,6 @@ func TestRecorder_Read(t *testing.T) {
 		{"1sample", rs[1], 2 * 2},
 		{"8192B", rs[2], 8192},
 		{"1s", rs[3], 1 * 48000 * 2 * 2},
-		{"3s", rs[4], 3 * 48000 * 2 * 2},
 	}
 	for _, c := range cases {
 		c := c

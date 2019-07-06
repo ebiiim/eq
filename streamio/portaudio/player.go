@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Player is a writable PortAudio output device.
 type Player struct {
 	initOnce     sync.Once
 	stream       *portaudio.Stream
@@ -20,6 +21,7 @@ type Player struct {
 	writerBuffer safe.Buffer
 }
 
+// NewPlayer initialize a Player object.
 func NewPlayer(outputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *Player, err error) {
 	playBuffer := make([]int16, bufferSize)
 	// initialize Player
@@ -69,13 +71,19 @@ func (p *Player) play() error {
 	return nil
 }
 
+// Write writes len(b) bytes from b to the playback buffer.
+//
+// The first call to this function invokes a goroutine
+// that sequentially reads data from the playback buffer
+// and writes the data to the audio output device.
 func (p *Player) Write(b []byte) (n int, err error) {
 	p.initOnce.Do(p.initialize)
 	return p.writerBuffer.Write(b)
 }
 
-func (p *Player) Close() error {
-	err := portaudio.Terminate()
+// Close closes PortAudio.
+func (p *Player) Close() (err error) {
+	err = portaudio.Terminate() // do this first to avoid race conditions
 	if err != nil {
 		return errors.Wrap(err, "failed to terminate Player")
 	}
