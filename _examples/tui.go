@@ -18,13 +18,18 @@ import (
 )
 
 type TUI struct {
+	mu     sync.Mutex
 	r      streamio.Recorder
 	p      streamio.Player
 	vf     *function.Filter
 	sf     *pipe.Filter
 	volume float64
 	isMute bool
-	mu     sync.Mutex
+	// sound processing settings
+	buffer   int
+	channels int
+	bit      int
+	rate     int
 }
 
 var tui TUI
@@ -49,12 +54,10 @@ func initialize() error {
 		return 9999 // unreachable
 	}
 
-	const (
-		bs   = 4096  // buffer size
-		ch   = 2     // channels
-		bit  = 16    // bit rate
-		rate = 48000 // sampling rate
-	)
+	tui.buffer = 4096 // buffer size
+	tui.channels = 2  // channels
+	tui.bit = 16      // bit rate
+	tui.rate = 48000  // sampling rate
 
 	ds, err := portaudio.ListDevices()
 	if err != nil {
@@ -66,12 +69,12 @@ func initialize() error {
 	inID := scanIDLoop("Select an input device > ")
 	outID := scanIDLoop("Select an output device > ")
 
-	r, err := portaudio.NewRecorder(inID, bs, ch, bit, rate, binary.LittleEndian)
+	r, err := portaudio.NewRecorder(inID, tui.buffer, tui.channels, tui.bit, tui.rate, binary.LittleEndian)
 	if err != nil {
 		return err
 	}
 
-	p, err := portaudio.NewPlayer(outID, bs, ch, bit, rate, binary.LittleEndian)
+	p, err := portaudio.NewPlayer(outID, tui.buffer, tui.channels, tui.bit, tui.rate, binary.LittleEndian)
 	if err != nil {
 		return err
 	}
@@ -86,7 +89,7 @@ func initialize() error {
 	tui.volume = 1
 
 	var soxCommand sox.Command
-	soxCommand.BufferSize = bs
+	soxCommand.BufferSize = tui.buffer / 2
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
 	tui.vf.Func, err = function.Volume(tui.volume)
@@ -110,7 +113,7 @@ func play(ctx context.Context) {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}()
-	b := make([]byte, 4096*2)
+	b := make([]byte, tui.buffer*2)
 	for {
 		select {
 		case <-ctx.Done():
