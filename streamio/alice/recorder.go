@@ -38,7 +38,7 @@ func (r *Recorder) record() error {
 
 // Read reads len(b) bytes from the record buffer into b.
 //
-// The function blocks if the record buffer contains less than len(b) bytes.
+// The function blocks until it reads len(b) bytes or more.
 // The function does not support ioutil.ReadAll (blocks permanently).
 //
 // The first call to this function invokes a goroutine
