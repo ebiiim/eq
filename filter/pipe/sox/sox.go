@@ -95,5 +95,5 @@ func NewGain(gain float64) Effect {
 
 // NewEQ returns an equalizer effect (e.g. "equalizer 1000 5.0q -3.0").
 func NewEQ(freq uint, q float64, gain float64) Effect {
-	return Effect(fmt.Sprintf("equalizer %d %.3f %.3f", freq, q, gain))
+	return Effect(fmt.Sprintf("equalizer %d %.3fq %.3f", freq, q, gain))
 }

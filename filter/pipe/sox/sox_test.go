@@ -39,8 +39,8 @@ func TestNewSoXEQ(t *testing.T) {
 		gain float64
 		want string
 	}{
-		{"normal", 1000, 5.0, -10.0, "equalizer 1000 5.000 -10.000"},
-		{"int", 5000, 5, -10, "equalizer 5000 5.000 -10.000"},
+		{"normal", 1000, 5.0, -10.0, "equalizer 1000 5.000q -10.000"},
+		{"int", 5000, 5, -10, "equalizer 5000 5.000q -10.000"},
 	}
 	for _, c := range cases {
 		c := c
