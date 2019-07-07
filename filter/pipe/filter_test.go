@@ -20,7 +20,7 @@ func TestFilter(t *testing.T) {
 		{"no_change", "tee -i /dev/null", []byte{11, 22, 33, 44}, []byte{11, 22, 33, 44}, false},
 		{"sox", (&sox.Command{}).String(), make([]byte, 8192*2), make([]byte, 8192*2), false},
 		{"sox_max_bs", (&sox.Command{}).String(), make([]byte, 8192*4), make([]byte, 8192*4), false},
-		{"sox_3to2", (&sox.Command{}).String(), make([]byte, 8192*3), make([]byte, 8192*3), false},
+		{"sox_small_bs", (&sox.Command{BufferSize: 32}).String(), make([]byte, 32*2), make([]byte, 32*2), false},
 	}
 	for _, c := range cases {
 		c := c
