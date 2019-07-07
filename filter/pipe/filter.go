@@ -54,9 +54,6 @@ func (f *Filter) initialize() (err error) {
 // The function blocks until it reads len(b) bytes or more.
 // The function does not support ioutil.ReadAll (blocks permanently).
 func (f *Filter) Read(b []byte) (n int, err error) {
-	if err != nil {
-		return 0, err
-	}
 	n, err = f.outPipe.Read(b)
 	return
 }
@@ -70,10 +67,10 @@ func (f *Filter) Read(b []byte) (n int, err error) {
 // process them, and writes the processed data into the output pipe.
 func (f *Filter) Write(b []byte) (n int, err error) {
 	f.initOnce.Do(func() { err = f.initialize() })
-
 	if err != nil {
 		return 0, err
 	}
+
 	n, err = f.inPipe.Write(b)
 	return
 }
