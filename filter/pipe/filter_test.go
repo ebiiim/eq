@@ -27,7 +27,7 @@ func TestFilter(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			var f pipe.Filter
-			f.FilterCmd = c.cmd
+			f.Cmd = c.cmd
 			_, err := f.Write(c.in)
 			if !((err != nil) == c.isErr) {
 				t.Errorf("got %v, want %v(isErr) ", err, c.isErr)

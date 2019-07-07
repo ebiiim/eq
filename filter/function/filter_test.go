@@ -33,7 +33,7 @@ func TestFilter(t *testing.T) {
 			t.Parallel()
 			var f function.Filter
 			f.ChunkSize = c.chunkSize
-			f.FilterFunc = c.fn
+			f.Func = c.fn
 			_, err := f.Write(c.in)
 			if !((err != nil) == c.isErr) {
 				t.Errorf("got %v, want %v(isErr) ", err, c.isErr)

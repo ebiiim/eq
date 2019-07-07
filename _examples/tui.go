@@ -89,11 +89,11 @@ func initialize() error {
 	soxCommand.BufferSize = bs
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
-	tui.vf.FilterFunc, err = function.Volume(tui.volume)
+	tui.vf.Func, err = function.Volume(tui.volume)
 	if err != nil {
 		return err
 	}
-	tui.sf.FilterCmd = soxCommand.String()
+	tui.sf.Cmd = soxCommand.String()
 	return nil
 }
 
@@ -163,7 +163,7 @@ func startTUI() error {
 			return err
 		}
 		tui.mu.Lock()
-		tui.vf.FilterFunc = fn
+		tui.vf.Func = fn
 		tui.mu.Unlock()
 		return nil
 	}
