@@ -1,3 +1,5 @@
+// Package sox provides a command generator of SoX (a multipurpose sound processing program)
+// focusing on working with filter.Pipe or any other object that wraps exec.Command.
 package sox
 
 import (
@@ -16,6 +18,7 @@ const (
 	EndianBig, EndianLittle               Option = "-B", "-L"
 )
 
+// Command struct holds SoX options.
 type Command struct {
 	initOnce                                                         sync.Once
 	ExecPath                                                         string
@@ -25,6 +28,7 @@ type Command struct {
 	Effects                                                          []Effect
 }
 
+// String convert the Command object to an executable sox command.
 func (s *Command) String() string {
 	s.initOnce.Do(func() {
 		if s.ExecPath == "" {
@@ -81,12 +85,15 @@ func (s *Command) String() string {
 	return cmdStr
 }
 
+// Effect is a sox effect that can be used with Command.
 type Effect string
 
+// NewGain returns a gain effect (e.g. "gain -3.0").
 func NewGain(gain float64) Effect {
 	return Effect(fmt.Sprintf("gain %.3f", gain))
 }
 
+// NewEQ returns an equalizer effect (e.g. "equalizer 1000 5.0q -3.0").
 func NewEQ(freq uint, q float64, gain float64) Effect {
 	return Effect(fmt.Sprintf("equalizer %d %.3f %.3f", freq, q, gain))
 }
