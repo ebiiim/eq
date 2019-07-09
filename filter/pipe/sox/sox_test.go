@@ -1,6 +1,7 @@
 package sox_test
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/ebiiim/eq/filter/pipe/sox"
@@ -57,16 +58,21 @@ func TestNewSoXEQ(t *testing.T) {
 func TestSoX_Cmd(t *testing.T) {
 	cases := []struct {
 		name string
+		os   string
 		cmd  *sox.Command
 		want string
 	}{
-		{"default", &sox.Command{}, "sox -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
+		{"darwin", "darwin", &sox.Command{}, "sox -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
+		{"linux", "linux", &sox.Command{}, "stdbuf -o16384 sox -traw -b16 -r48000 -c2 -esigned -L - -traw -b16 -r48000 -c2 -esigned -L - --buffer 8192 -V0"},
 	}
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			got := c.cmd.String()
+			if runtime.GOOS != c.os {
+				return
+			}
 			if got != c.want {
 				t.Errorf("got %v\nwant  %v", got, c.want)
 			}
