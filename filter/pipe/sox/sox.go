@@ -4,6 +4,7 @@ package sox
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 )
 
@@ -78,7 +79,9 @@ func (s *Command) String() string {
 	cmdIn := fmt.Sprintf("-t%s -b%s -r%s -c%s -e%s %s -", s.InFormat, s.InBit, s.InRate, s.InChannels, s.InEncode, s.InByteOrder)
 	cmdOut := fmt.Sprintf("-t%s -b%s -r%s -c%s -e%s %s -", s.OutFormat, s.OutBit, s.OutRate, s.OutChannels, s.OutEncode, s.OutByteOrder)
 	cmdStr := fmt.Sprintf("%s %s %s --buffer %d -V0", s.ExecPath, cmdIn, cmdOut, s.BufferSize)
-
+	if runtime.GOOS == "linux" {
+		cmdStr = fmt.Sprintf("stdbuf -o%d %s", s.BufferSize*2, cmdStr)
+	}
 	for _, e := range s.Effects {
 		cmdStr += " " + string(e)
 	}
