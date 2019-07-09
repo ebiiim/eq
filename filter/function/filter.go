@@ -24,7 +24,7 @@ type Filter struct {
 	// and does some processing on them.
 	//
 	// e.g. function.Rot13
-	Func func([]byte)
+	Func safe.Func
 
 	// ChunkSize determines the number of bytes to pass to Func once (default: 32).
 	//
@@ -38,8 +38,8 @@ func (f *Filter) initialize() {
 	if f.ChunkSize == 0 {
 		f.ChunkSize = 32
 	}
-	if f.Func == nil {
-		f.Func = func([]byte) {}
+	if f.Func.IsNil() {
+		f.Func.Set(func([]byte) {})
 	}
 	f.bufferSize = 65536 / f.ChunkSize // 64KB (max.)
 	f.inCh = make(chan []byte, f.bufferSize)
@@ -48,7 +48,7 @@ func (f *Filter) initialize() {
 	go func() {
 		for {
 			b := <-f.inCh
-			f.Func(b)
+			f.Func.Do(b)
 			f.outCh <- b
 		}
 	}()

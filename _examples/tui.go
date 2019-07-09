@@ -92,10 +92,11 @@ func initialize() error {
 	soxCommand.BufferSize = tui.buffer / 2
 	soxCommand.Effects = []sox.Effect{sox.NewGain(-3.0), sox.NewEQ(80, 5.0, +3)}
 
-	tui.vf.Func, err = function.Volume(tui.volume)
+	fn, err := function.Volume(tui.volume)
 	if err != nil {
 		return err
 	}
+	tui.vf.Func.Set(fn)
 	tui.sf.Cmd = soxCommand.String()
 	return nil
 }
@@ -165,9 +166,7 @@ func startTUI() error {
 		if err != nil {
 			return err
 		}
-		tui.mu.Lock()
-		tui.vf.Func = fn
-		tui.mu.Unlock()
+		tui.vf.Func.Set(fn)
 		return nil
 	}
 

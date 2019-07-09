@@ -33,7 +33,7 @@ func TestFilter(t *testing.T) {
 			t.Parallel()
 			var f function.Filter
 			f.ChunkSize = c.chunkSize
-			f.Func = c.fn
+			f.Func.Set(c.fn)
 			_, err := f.Write(c.in)
 			if !((err != nil) == c.isErr) {
 				t.Errorf("got %v, want %v(isErr) ", err, c.isErr)
@@ -47,6 +47,37 @@ func TestFilter(t *testing.T) {
 			}
 			if !cmp.Equal(c.in, c.want) {
 				t.Errorf("got %v want %v", c.in, c.want)
+			}
+		})
+	}
+}
+
+func TestFilterMutex(t *testing.T) {
+	cases := []struct {
+		name      string
+		fn1       func([]byte)
+		fn2       func([]byte)
+		chunkSize int
+		in        []byte
+	}{
+		{"upper", function.ToUpper, function.ToLower, 4, []byte("xXxXxXxX")},
+		{"lower", function.ToLower, function.ToUpper, 4, []byte("xXxXxXxX")},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			var f function.Filter
+			f.ChunkSize = c.chunkSize
+			f.Func.Set(c.fn1)
+			_, err := f.Write(c.in)
+			if err != nil {
+				t.Error(err)
+			}
+			f.Func.Set(c.fn2)
+			_, err = f.Read(c.in)
+			if err != nil {
+				t.Error(err)
 			}
 		})
 	}
