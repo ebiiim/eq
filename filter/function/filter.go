@@ -13,13 +13,6 @@ import (
 
 // Filter is a stream data processor using a function.
 type Filter struct {
-	initOnce   sync.Once
-	inBuf      safe.Buffer
-	outBuf     safe.Buffer
-	inCh       chan []byte
-	outCh      chan []byte
-	bufferSize int
-
 	// Func is a function that reads len(b) bytes from b
 	// and does some processing on them.
 	//
@@ -32,6 +25,16 @@ type Filter struct {
 	// Func is called only when the size of data in the input buffer
 	// (Write puts data into the input buffer) is ChunkSize or more.
 	ChunkSize int
+
+	initOnce sync.Once
+	done     chan struct{} // This channel should only be initialized by initialize() and by closed by Close()
+	wg       sync.WaitGroup
+
+	inBuf      safe.Buffer
+	outBuf     safe.Buffer
+	inCh       chan []byte
+	outCh      chan []byte
+	bufferSize int
 }
 
 func (f *Filter) initialize() {
@@ -44,12 +47,19 @@ func (f *Filter) initialize() {
 	f.bufferSize = 65536 / f.ChunkSize // 64KB (max.)
 	f.inCh = make(chan []byte, f.bufferSize)
 	f.outCh = make(chan []byte, f.bufferSize)
+	f.done = make(chan struct{})
 
 	go func() {
+		f.wg.Add(1)
+		defer f.wg.Done()
 		for {
-			b := <-f.inCh
-			f.Func.Do(b)
-			f.outCh <- b
+			select {
+			case b := <-f.inCh:
+				f.Func.Do(b)
+				f.outCh <- b
+			case <-f.done:
+				return
+			}
 		}
 	}()
 }
@@ -96,8 +106,10 @@ func (f *Filter) Write(b []byte) (int, error) {
 
 // Close closes the Filter object.
 func (f *Filter) Close() error {
-	close(f.outCh)
+	close(f.done)
+	f.wg.Wait()
 	close(f.inCh)
+	close(f.outCh)
 	return nil
 }
 
