@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// TestFilter_Read and TestFilter_Write
+// TestFilter_Read and TestFilter_Write and TestFilter_Close
 func TestFilter(t *testing.T) {
 	cases := []struct {
 		name      string
@@ -48,6 +48,10 @@ func TestFilter(t *testing.T) {
 			if !cmp.Equal(c.in, c.want) {
 				t.Errorf("got %v want %v", c.in, c.want)
 			}
+			err = f.Close()
+			if err != nil {
+				t.Errorf("could not close: %v", err)
+			}
 		})
 	}
 }
@@ -81,10 +85,6 @@ func TestFilterMutex(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestFilter_Close(t *testing.T) {
-	// NOTE: not implemented
 }
 
 func TestVolume(t *testing.T) {
