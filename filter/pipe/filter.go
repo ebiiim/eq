@@ -14,11 +14,6 @@ import (
 
 // Filter is a stream data processor using an external program.
 type Filter struct {
-	cmd      *exec.Cmd
-	initOnce sync.Once
-	inPipe   io.WriteCloser
-	outPipe  io.ReadCloser
-
 	// Cmd is a command that contains an execPath and args.
 	//
 	// The command should sequentially read stdin,
@@ -26,6 +21,11 @@ type Filter struct {
 	//
 	// e.g. "tee -i /dev/null"
 	Cmd string
+
+	initOnce sync.Once
+	cmd      *exec.Cmd
+	inPipe   io.WriteCloser
+	outPipe  io.ReadCloser
 }
 
 func (f *Filter) initialize() (err error) {
@@ -81,11 +81,6 @@ func (f *Filter) Close() (err error) {
 	if err != nil {
 		return errors.Wrap(err, "could not close stdin pipe")
 	}
-	// FIXME: wait until outPipe is empty
-	err = f.outPipe.Close()
-	if err != nil {
-		return errors.Wrap(err, "could not close stdout pipe")
-	}
 	err = f.cmd.Wait()
 	if err != nil {
 		return errors.Wrap(err, "could not wait exec")
@@ -93,5 +88,6 @@ func (f *Filter) Close() (err error) {
 	if f.cmd.ProcessState.ExitCode() != 0 {
 		return fmt.Errorf("abnormal exit code %d", f.cmd.ProcessState.ExitCode())
 	}
+	// f.outPipe is closed when the process is exited.
 	return nil
 }
