@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"sync"
 
 	"github.com/ebiiim/eq/filter/function"
 	"github.com/ebiiim/eq/filter/pipe"
@@ -18,7 +17,6 @@ import (
 )
 
 type TUI struct {
-	mu     sync.Mutex
 	r      streamio.Recorder
 	p      streamio.Player
 	vf     *function.Filter

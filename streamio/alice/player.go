@@ -60,7 +60,8 @@ func (p *Player) Write(b []byte) (n int, err error) {
 	return p.writerBuffer.Write(b)
 }
 
-// Close simply returns nil because there is nothing to close in Player.
+// Close terminates Player.
 func (p *Player) Close() error {
+	// TODO: terminate the goroutine
 	return nil
 }

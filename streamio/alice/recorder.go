@@ -54,7 +54,8 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-// Close simply returns nil because there is nothing to close in Recorder.
+// Close terminates Recorder.
 func (r *Recorder) Close() error {
+	// TODO: terminate the goroutine
 	return nil
 }

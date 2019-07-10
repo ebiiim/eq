@@ -83,8 +83,9 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-// Close terminates PortAudio.
+// Close terminates Recorder.
 func (r *Recorder) Close() (err error) {
+	// TODO: terminate the goroutine
 	err = r.stream.Stop()
 	if err != nil {
 		return errors.Wrap(err, "failed to stop stream")

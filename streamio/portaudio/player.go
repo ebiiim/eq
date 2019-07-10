@@ -79,8 +79,9 @@ func (p *Player) Write(b []byte) (n int, err error) {
 	return p.writerBuffer.Write(b)
 }
 
-// Close terminates PortAudio.
+// Close terminates Player.
 func (p *Player) Close() (err error) {
+	// TODO: terminate the goroutine
 	err = p.stream.Stop()
 	if err != nil {
 		return errors.Wrap(err, "failed to stop stream")
