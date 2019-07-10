@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/ebiiim/eq/internal/safe"
@@ -14,7 +13,6 @@ import (
 
 // Recorder is a readable PortAudio input device.
 type Recorder struct {
-	initOnce     sync.Once
 	stream       *portaudio.Stream
 	recordBuffer *[]int16
 	byteOrder    binary.ByteOrder
@@ -22,6 +20,10 @@ type Recorder struct {
 }
 
 // NewRecorder initialize a Player object.
+//
+// This function invokes a goroutine
+// that sequentially reads data from the audio input device
+// and writes the data into the record buffer.
 func NewRecorder(inputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (r *Recorder, err error) {
 	recordBuffer := make([]int16, bufferSize)
 	// initialize Player
@@ -40,6 +42,7 @@ func NewRecorder(inputDeviceID int, bufferSize int, channels int, bitDepth int, 
 		return nil, errors.Wrap(err, "failed to start stream")
 	}
 	r = &Recorder{stream: stream, recordBuffer: &recordBuffer, byteOrder: byteOrder}
+	r.initialize()
 	return r, nil
 }
 
@@ -72,13 +75,7 @@ func (r *Recorder) record() error {
 //
 // The function blocks until it reads len(b) bytes or more.
 // The function does not support ioutil.ReadAll (blocks permanently).
-//
-// The first call to this function invokes a goroutine
-// that sequentially reads data from the audio input device
-// and writes the data into the record buffer.
 func (r *Recorder) Read(b []byte) (n int, err error) {
-	r.initOnce.Do(r.initialize)
-
 	readLen := len(b)
 	for r.readerBuffer.Len() < readLen {
 		time.Sleep(1 * time.Millisecond) // wait for record
@@ -86,12 +83,8 @@ func (r *Recorder) Read(b []byte) (n int, err error) {
 	return r.readerBuffer.Read(b)
 }
 
-// Close closes PortAudio.
+// Close terminates PortAudio.
 func (r *Recorder) Close() (err error) {
-	err = portaudio.Terminate() // do this first to avoid race conditions
-	if err != nil {
-		return errors.Wrap(err, "failed to terminate Player")
-	}
 	err = r.stream.Stop()
 	if err != nil {
 		return errors.Wrap(err, "failed to stop stream")
@@ -99,6 +92,10 @@ func (r *Recorder) Close() (err error) {
 	err = r.stream.Close()
 	if err != nil {
 		return errors.Wrap(err, "failed to close stream")
+	}
+	err = portaudio.Terminate()
+	if err != nil {
+		return errors.Wrap(err, "failed to terminate Player")
 	}
 	return nil
 }

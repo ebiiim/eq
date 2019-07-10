@@ -8,7 +8,7 @@ import (
 )
 
 func TestNewPlayer(t *testing.T) {
-	// NOTE: currently, we do not test this function because its results depends on sound devices
+	// NOTE: currently, we do not test this function because the result depends on sound devices
 }
 
 func initPlayers(t *testing.T) []*portaudio.Player {

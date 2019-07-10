@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/ebiiim/eq/internal/safe"
@@ -14,7 +13,6 @@ import (
 
 // Player is a writable PortAudio output device.
 type Player struct {
-	initOnce     sync.Once
 	stream       *portaudio.Stream
 	playBuffer   *[]int16
 	byteOrder    binary.ByteOrder
@@ -22,6 +20,10 @@ type Player struct {
 }
 
 // NewPlayer initialize a Player object.
+//
+// This function invokes a goroutine
+// that sequentially reads data from the playback buffer
+// and writes the data to the audio output device.
 func NewPlayer(outputDeviceID int, bufferSize int, channels int, bitDepth int, sampleRate int, byteOrder binary.ByteOrder) (p *Player, err error) {
 	playBuffer := make([]int16, bufferSize)
 	// initialize Player
@@ -40,6 +42,7 @@ func NewPlayer(outputDeviceID int, bufferSize int, channels int, bitDepth int, s
 		return nil, errors.Wrap(err, "failed to start stream")
 	}
 	p = &Player{stream: stream, playBuffer: &playBuffer, byteOrder: byteOrder}
+	p.initialize()
 	return p, nil
 }
 
@@ -72,21 +75,12 @@ func (p *Player) play() error {
 }
 
 // Write writes len(b) bytes from b to the playback buffer.
-//
-// The first call to this function invokes a goroutine
-// that sequentially reads data from the playback buffer
-// and writes the data to the audio output device.
 func (p *Player) Write(b []byte) (n int, err error) {
-	p.initOnce.Do(p.initialize)
 	return p.writerBuffer.Write(b)
 }
 
-// Close closes PortAudio.
+// Close terminates PortAudio.
 func (p *Player) Close() (err error) {
-	err = portaudio.Terminate() // do this first to avoid race conditions
-	if err != nil {
-		return errors.Wrap(err, "failed to terminate Player")
-	}
 	err = p.stream.Stop()
 	if err != nil {
 		return errors.Wrap(err, "failed to stop stream")
@@ -94,6 +88,10 @@ func (p *Player) Close() (err error) {
 	err = p.stream.Close()
 	if err != nil {
 		return errors.Wrap(err, "failed to close stream")
+	}
+	err = portaudio.Terminate()
+	if err != nil {
+		return errors.Wrap(err, "failed to terminate Player")
 	}
 	return nil
 }
