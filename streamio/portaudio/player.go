@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/JulianKnodt/portaudio"
 	"github.com/ebiiim/eq/internal/safe"
-	"github.com/gordonklaus/portaudio"
 	"github.com/pkg/errors"
 )
 

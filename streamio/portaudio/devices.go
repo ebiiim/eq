@@ -4,7 +4,7 @@ package portaudio
 import (
 	"fmt"
 
-	"github.com/gordonklaus/portaudio"
+	"github.com/JulianKnodt/portaudio"
 	"github.com/pkg/errors"
 )
 
